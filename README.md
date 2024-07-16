@@ -40,6 +40,13 @@ pnpm install
 bun install
 ```
 
+Create an .env file in the root directory:
+
+```plaintext
+DATABASE_URL="POSTGRESQL CONNECTION STRING"
+JWT_SECRET="mysecretkey"
+```
+
 To run the development server, use one of the following commands:
 
 ```bash
