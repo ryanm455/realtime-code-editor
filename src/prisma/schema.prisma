@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator pothos {
+  provider = "prisma-pothos-types"
+  clientOutput = "@prisma/client"
+  output = "./pothos-types.ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int        @id @default(autoincrement())
+  name              String
+  numSessions       Int        @default(0)
+  editingFiles      Document[] @relation("EditingFiles")
+  createdRooms      Room[]     @relation("CreatedRooms")
+  lastModifiedFiles Document[] @relation("LastModifiedBy")
+  joinedRooms       Room[]     @relation("JoinedRooms")
+}
+
+model Room {
+  id        Int     @id @default(autoincrement())
+  name      String
+  nodes     Node[]  @relation("RoomNodes")
+  creator   User    @relation("CreatedRooms", fields: [creatorId], references: [id])
+  creatorId Int
+  users     User[]  @relation("JoinedRooms")
+  locked    Boolean @default(false)
+}
+
+enum NodeType {
+  FILE
+  FOLDER
+}
+
+model Node {
+  id       Int       @id @default(autoincrement())
+  name     String
+  room     Room      @relation("RoomNodes", fields: [roomId], references: [id])
+  roomId   Int
+  parent   Node?     @relation("ParentNode", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  parentId Int?
+  children Node[]    @relation("ParentNode")
+  type     NodeType
+  file     Document? @relation("NodeDocument", fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  fileId   Int?      @unique
+}
+
+model Document {
+  id               Int     @id @default(autoincrement())
+  node             Node?   @relation("NodeDocument")
+  content          String?
+  lastModifiedBy   User?   @relation("LastModifiedBy", fields: [lastModifiedById], references: [id])
+  lastModifiedById Int?
+  editors          User[]  @relation("EditingFiles")
+}
